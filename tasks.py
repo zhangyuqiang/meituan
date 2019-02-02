@@ -11,24 +11,37 @@ _ = int(time.time() * 1000)
 url = "http://i.waimai.meituan.com/openh5/poi/food?_={}".format(_)
 
 headers = {
-    "User-Agent": "Mozilla/5.0 (Linux; Android 5.0; SM-G900P Build/LRX21T) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.102 Mobile Safari/537.36",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.81 Safari/537.36",
     "Referer": "http://i.waimai.meituan.com/openh5/homepage/poilist",
     "Host": "i.waimai.meituan.com",
     "Origin": "http://h5.waimai.meituan.com",
     "Accept": "application/json",
     "Accept-Encoding": "gzip, deflate",
-    "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
-    "Connection": "keep-alive",
-    "Content-Length": "180",
-    "Content-Type": "application/x-www-form-urlencoded",
-
+    "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8", }
+data = {
+    "startIndex": "0",
+    "sortId": "0",
+    "multiFilterIds": "",
+    "sliderSelectCode": "",
+    "sliderSelectMin": "",
+    "sliderSelectMax": "",
+    "geoType": "2",
+    "rankTraceId": "",
+    "wm_latitude": "34213074",
+    "wm_longitude": "117175680",
+    "wm_actual_latitude": "34212690",
+    "wm_actual_longitude": "117174720",
 }
+headers[
+    "Cookie"] = 'w_actual_lat={}; w_actual_lng={};wm_order_channel=default; openh5_uuid=;'.format(
+    data["wm_actual_latitude"], data["wm_actual_longitude"])
 
 
 @app.task
 def crawl(shop):
     print('正在抓取链接{}'.format(shop))
     content = parse_detail(shop)
+    # print(content)
     # print(content)
     item = {}
     # products =[]
@@ -77,9 +90,9 @@ def crawl(shop):
 
             total = data.get("recordCount")
             nextindex = data.get("nextStartIndex")
-            for i in range((int(total)//20)):
+            for i in range((int(total) // 20)):
                 # print("下一页")
-                content = parse_evaluate(shop,nextindex)
+                content = parse_evaluate(shop, nextindex)
                 nextindex = content.get("data").get("nextStartIndex")
 
                 data = content.get("data")
@@ -106,7 +119,7 @@ def rpost(url, data):
             # print(data,)
             # print(headers)
             # print(get_random_proxy)
-            resp = requests.post(url, data=data, headers=headers, proxies=get_random_proxy(), timeout=20)
+            resp = requests.post(url, data=data, headers=headers, proxies=get_random_proxy(), timeout=10)
             if resp.status_code == 200:
                 return resp
 
@@ -128,10 +141,11 @@ def parse_detail(shop):
     }
     # print(data)
     headers[
-        "Cookie"] = 'uuid=0c930c6315394f57bcd4.1546058773.1.0.0; _lxsdk_cuid=167f848b869c8-07cfbb16ea70cf-3f674604-1fa400-167f848b86ac8; _ga=GA1.3.106177890.1546058776; _gid=GA1.3.1457812280.1546058776; _lx_utm=utm_source%3DBaidu%26utm_medium%3Dorganic; __mta=247233467.1546058778366.1546058778366.1546058778366.1; terminal=i; w_utmz="utm_campaign=(direct)&utm_source=5000&utm_medium=(none)&utm_content=(none)&utm_term=(none)"; w_uuid=X0Qg7ezlPGsZCkz8wRXWyt5fvFJDaP0trQXGs7rkTM1l6Bbb5CccGSxmiDUOPLyb; utm_source=0; wx_channel_id=0; JSESSIONID=1h9ctnob8to9ugis02tzmakgv; webp=1; __mta=247233467.1546058778366.1546058778366.1546058783530.2; w_addr=; w_actual_lat={}; w_actual_lng={}; wm_order_channel=default; openh5_uuid=; openh5_uuid=IOx-ogmFpg3ct-USwbINQsaW87IP2zpvKruvBp9JVT57WZLe5-QsANvjDdObob4b; w_visitid=780c0fd7-5672-44d7-bb69-b20fdd0cd2a9; _lxsdk_s=%7C%7C3'.format(
+        "Cookie"] = 'w_actual_lat={}; w_actual_lng={};wm_order_channel=default; openh5_uuid=;'.format(
         data["wm_latitude"], data["wm_longitude"])
     resp = rpost(url, data=data)
     content = json.loads(resp.content.decode())
+    # print(content)
     return content
 
 
@@ -158,7 +172,7 @@ def parse_address(shop):
     return data
 
 
-def parse_evaluate(shop,index=0):
+def parse_evaluate(shop, index=0):
     # time.sleep(5)
     url = "http://i.waimai.meituan.com/openh5/poi/comments?_={}".format(_)
     x = shop.get("x")
