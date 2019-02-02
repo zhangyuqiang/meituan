@@ -1,7 +1,6 @@
 import json
 from get_proxy import get_random_proxy
 import requests
-from bs4 import BeautifulSoup
 from workers import app
 import requests
 from scrapy import Selector
